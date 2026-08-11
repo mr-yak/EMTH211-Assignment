@@ -1,4 +1,4 @@
-import numpy as np
+#import numpy as np
 import scipy
 from display import *
 
@@ -15,13 +15,14 @@ def myLU(A, dtype = np.float64):
     rows = np.arange(n)
     row_swaps = np.empty((0, 2))
     for col in range(n-1):
-        pivot_row = np.abs(U[rows,col]).argmax()
-        pivot = (U[rows, col])[pivot_row]
-        row_swaps = np.vstack([row_swaps, np.array([col, pivot_row])])
-        rows = rows[rows != pivot_row]
-        for row in rows:
-            L[row, col] = U[row, col] / pivot
-            U[row] = U[row] - (U[row, col] / pivot) * U[pivot_row]
+        pivot_row = rows[np.abs(U[rows,col]).argmax()]
+        pivot = (U[:, col])[pivot_row]
+        if pivot != 0:
+            row_swaps = np.vstack([row_swaps, np.array([col, pivot_row])])
+            rows = rows[rows != pivot_row]
+            factors = U[rows, col] / pivot
+            L[rows, col] = factors
+            U[rows] -= factors[:, np.newaxis] * U[pivot_row]
     row_swaps = np.vstack([row_swaps, np.array([n-1, rows[0]])])
     row_swaps = np.astype(row_swaps, int)
     U[row_swaps.T[0]] = U[row_swaps.T[1]]
