@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from fontTools.diff import color
-
 
 def V(v):
     return r"\mathbf{\underline{" + v + r"}}"
@@ -37,3 +35,19 @@ def timing_plot(ns, times):
     ax_2.plot(ns, times, label='actual')
     ax_2.plot(ns, theoretical_time, label='theoretical')
     ax_2.legend()
+
+def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
+    fig, (ax_3, ax_4) = plt.subplots(1, 2, figsize=(12, 6))
+    ax_4.set_yscale('log')
+    ax_4.set_ylabel('Number of iterations for SOR to converge (log scale)')
+    ax_3.set_ylabel('Number of iterations for SOR to converge')
+    fig.suptitle(r"Number of iterations to converge vs $\omega$ using Successive Over Relaxation")
+    def _plot(ax_n):
+        ax_n.set_xlabel(r'$\omega$ value')
+        ax_n.plot( ws, gs_iters, label='Gauss-Siedel Iterations', color='orange')
+        ax_n.plot(ws, iters, color="red", label='SOR Iterations')
+        mask = iters <= gs_iters
+        ax_n.fill_between(ws_gt_gs, gs_iters[mask], iters[mask], facecolor="none", hatch="xxx", edgecolor="orange")
+        ax_n.legend(loc="upper right")
+    _plot(ax_3)
+    _plot(ax_4)

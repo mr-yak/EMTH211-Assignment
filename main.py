@@ -4,10 +4,10 @@ import question_three
 import matplotlib.pyplot as plt
 from tests import *
 
-question = "Q1 Q_2"
+question = "Q_1 Q_2 Q3"
 
 def main():
-    np.set_printoptions(precision = 2)
+    np.set_printoptions(precision = 5)
     if "Q1" in question:
         question_one.main()
     if "Q2" in question:
@@ -20,7 +20,7 @@ def main():
 def tests():
     #LU_partial_pivot_test()
     #solve_system_test()
-    so_iterator_test(5, 3)
+    #so_iterator_test(5, 1.3)
     pass
 
 if __name__ == "__main__":

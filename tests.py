@@ -25,7 +25,7 @@ def LU_partial_pivot_test():
     print(f"P^-1LU = \n{P.T @ L @ U}")
 
 def so_iterator_test(n, w):
-    A = good_matrix(n, 100)
+    A = good_matrix(n, 0.5)
     b = np.ones(n)
     print(f"A = \n{A}")
     print(f"b = \n{b}")
