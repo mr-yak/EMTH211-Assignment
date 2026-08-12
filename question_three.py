@@ -3,9 +3,11 @@ only part A done, will get onto part B later in the week, could you give it a qu
 
 also i saw you changed up Q2, if you want to do the same here go ahead, im just a bit lost with that so cant really help there
 """
-import numpy as np
+import torch
 from question_one import *
 from display import *
+from rich.progress import track
+
 '''
 def forwardSub(L, b):
     n = len(b)
@@ -36,6 +38,7 @@ def sor(A , b , x0 , w , max_iter =1000 , tol =1e-8 ):
         x = x_new.copy()
     return np.array(results), converged
 """
+
 def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
     error = np.inf
     xk = x0.copy()
@@ -87,13 +90,9 @@ def good_matrix(n , d ):
     return B.T @ B + d*n*np.eye(n)
 
 def main():
-    """
-    a. i)
-    """
-    n = 20
-    d = .5
-    A = good_matrix(n, d)
-    b = np.ones(n)
+    #a i)
+    A = good_matrix(20, .5)
+    b = np.ones(20)
     x0 = b.copy()
 
     ws = np.arange(0.01, 1.995, 0.005) #397 makes sure gs is included
@@ -101,9 +100,7 @@ def main():
     for i in ws:
         x, num_iter = sor(A, b, x0, i, max_iter=1000)
         iters = np.append(iters, num_iter)
-    """
-    a. ii)
-    """
+    #ii / iii)
     gs_iter = iters[np.where(np.isclose(ws, 1.0))[0]][0]
     gs_iters = np.full(len(ws), gs_iter)
     ws_gt_gs = ws[iters <= gs_iters]
@@ -115,6 +112,54 @@ def main():
     print(f"SOR is better that GS when {ws_gt_gs[0]:.3f} < ω < {ws_gt_gs[-1]:.3f}")
     print(f"SOR is best when ω = {best_w:.3f}, taking {iters[np.argmin(iters)]:.0f} iterations to converge")
     print("#" * width)
+    #b)
+    ds = torch.linspace(0.01, 2, 350)
+    #ws are the same
+    ws = torch.from_numpy(ws)
+    X = torch.tensor([])
+    Y = torch.tensor([])
+    Z = torch.tensor([])
+    for d in track(ds, description = "Diagonals"):
+        print(f"{d}/2") #progress indicator
+        X = torch.append(X, np.array([d]) * len(ws))
+        A = good_matrix(20, d)
+        iters = torch.array([])
+        for i in track(ws, description = "Omegas"):
+            x, num_iter = sor(A, b, x0, i, max_iter=1000)
+            iters = torch.append(iters, num_iter)
+        Y = torch.append(Y, ws)
+        Z = torch.append(Z, iters)
+
+    plot_surface(X, Y, Z)
+
+def sor_pytorch(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
+    A,b,x0 = torch.from_numpy(A), torch.from_numpy(b), torch.from_numpy(x0)
+    error = torch.inf
+    xk = x0.copy()
+    i = 0
+    while error > tol and i <= max_iter:
+        i += 1
+        x_k1 = torch.tensor([])
+        for j in range(len(xk)):
+            x_k1 = torch.append(
+                x_k1,
+                (1-w)*xk[j]
+                + (w/A[j,j])*(
+                    - torch.dot(A[j, :j], x_k1[:j])
+                    - torch.dot(A[j, j+1:], xk[j+1:])
+                    + b[j]
+                )
+            )
+        error = torch_inf_norm(x_k1 - xk)/torch_inf_norm(x_k1)
+        xk = x_k1
+    if i >= max_iter:
+        return xk, 1000
+    else:
+        return xk, i
+
+def torch_inf_norm(v):
+    return max(np.abs(v))
+
 if __name__ == "__main__":
     main()
 

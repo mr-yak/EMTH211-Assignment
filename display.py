@@ -51,3 +51,6 @@ def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
         ax_n.legend(loc="upper right")
     _plot(ax_3)
     _plot(ax_4)
+
+def plot_surface(X,Y,Z):
+    pass

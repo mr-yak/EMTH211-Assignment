@@ -3,7 +3,6 @@
 # other application does effect outcome (1000x1000 = .006 vs .010 (s) while opening app)
 
 import time
-import matplotlib.pyplot as plt
 import numpy as np
 from display import *
 
