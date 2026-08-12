@@ -3,42 +3,45 @@ only part A done, will get onto part B later in the week, could you give it a qu
 
 also i saw you changed up Q2, if you want to do the same here go ahead, im just a bit lost with that so cant really help there
 """
-import torch
 from question_one import *
 from display import *
-from rich.progress import track
+from tqdm import tqdm
+import numpy as np
+import pickle
+import os
 
-'''
-def forwardSub(L, b):
-    n = len(b)
-    y = np.zeros(n)
-    for i in range(n):
-        s = b[i]
-        for k in range(i):
-            s -= L[i, k] * y[k]
-        y[i] = s / L[i, i]
-    return y
-'''
-#changing the gauss seidel stuff from learn, unsure if the equation is right
-"""
-def sor(A , b , x0 , w , max_iter =1000 , tol =1e-8 ): 
-    n = x0.shape[0]
-    x = x0.copy()
-    results = []
-    converged = False
-    for k in range(max_iter):
-        x_new = np.empty_like(x)
-        for i in range(n):
-                x_new[i] =(1-w) * x[i] + w * (b[i] - (A[i,:i].dot(x_new[:i])) - (A[i,i+1:].dot(x[i+1:])))/A[i,i]        
-        results.append([k+1,*x_new])
-        err = np.linalg.norm(x_new - x,np.inf)/np.linalg.norm(x_new,np.inf)
-        if err < tol:
-            converged = True
-            break
-        x = x_new.copy()
-    return np.array(results), converged
-"""
+os.environ["NUMBA_CPU_NAME"] = "generic"
 
+from numba import *
+
+RECALCULATE = True
+
+@njit
+def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
+    error = np.inf
+    xk = x0.copy()
+    n = len(x0)
+    i = 0
+    diag = np.diag(A)
+    wd = w / diag
+    while error > tol and i < max_iter:
+        i += 1
+        x_k1 = np.empty(n)
+        for j in range(n):
+            x_k1[j] = (
+                (1-w) * xk[j]
+                +  wd[j] *(
+                    - np.dot(A[j, :j], x_k1[:j])
+                    - np.dot(A[j, j+1:], xk[j+1:])
+                    + b[j]
+                )
+            )
+        error = np.linalg.norm((x_k1 - xk), ord = np.inf)/np.linalg.norm(x_k1, ord = np.inf)
+        xk[:] = x_k1
+    if error > tol:
+        return xk, 1001
+    return xk, i
+'''
 def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
     error = np.inf
     xk = x0.copy()
@@ -62,32 +65,36 @@ def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
         return xk, 1000
     else:
         return xk, i
-
-#from learn page 
-def gauss_seidel(A, b, x0, max_iter=100, tol=1e-3): # adding in to compare to SOR (a. iii)
-
-    P = np.tril(A)
-    solver = forwardSub
-
-    Q = P - A
-    converged = False
-    x = x0.copy()
-    results = []
-    for k in range(max_iter):
-        rhs = Q @ x + b
-        x_new = solver(P,rhs)
-        results.append([k+1,*x_new])
-        err = np.linalg.norm(x_new - x,np.inf)/np.linalg.norm(x_new,np.inf)
-        if err < tol:
-            converged = True
-            break
-        x = x_new.copy()
-    return np.array(results), k
-
+'''
 def good_matrix(n , d ):
     rng = np.random.default_rng(seed = 211)
     B = rng.uniform(size =(n, n))
     return B.T @ B + d*n*np.eye(n)
+
+def _calculate_d_and_w():
+    b = np.ones(20)
+    x0 = b.copy()
+    ds = np.linspace(0.01, 2, 50)
+    ws = np.linspace(0.01, 1.99, 300)
+    print(f"data = { len(ds) * len(ws)}")
+    X = np.zeros((len(ds), len(ws)))
+    Y = np.zeros((len(ds), len(ws)))
+    Z = np.zeros((len(ds), len(ws)))
+    for i, d in tqdm(enumerate(ds.tolist()), desc = "Data Crunching..."):
+        X[i] = np.full((len(ws),), d)
+        A = good_matrix(20, d)
+        iters = np.zeros(len(ws))
+        for j, w in enumerate(ws.tolist()):
+            x, num_iter = sor(A, b, x0, w, max_iter=1000)
+            iters[j] = num_iter
+        Y[i] = ws
+        Z[i] = iters
+    with open("x.pkl", "wb") as file:
+        pickle.dump(X, file)
+    with open("y.pkl", "wb") as file:
+        pickle.dump(Y, file)
+    with open("z.pkl", "wb") as file:
+        pickle.dump(Z, file)
 
 def main():
     #a i)
@@ -113,52 +120,12 @@ def main():
     print(f"SOR is best when ω = {best_w:.3f}, taking {iters[np.argmin(iters)]:.0f} iterations to converge")
     print("#" * width)
     #b)
-    ds = torch.linspace(0.01, 2, 350)
-    #ws are the same
-    ws = torch.from_numpy(ws)
-    X = torch.tensor([])
-    Y = torch.tensor([])
-    Z = torch.tensor([])
-    for d in track(ds, description = "Diagonals"):
-        print(f"{d}/2") #progress indicator
-        X = torch.append(X, np.array([d]) * len(ws))
-        A = good_matrix(20, d)
-        iters = torch.array([])
-        for i in track(ws, description = "Omegas"):
-            x, num_iter = sor(A, b, x0, i, max_iter=1000)
-            iters = torch.append(iters, num_iter)
-        Y = torch.append(Y, ws)
-        Z = torch.append(Z, iters)
 
-    plot_surface(X, Y, Z)
+    if RECALCULATE:
+        #only do this calculation once, very expensive, writes to files
+        _calculate_d_and_w()
 
-def sor_pytorch(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
-    A,b,x0 = torch.from_numpy(A), torch.from_numpy(b), torch.from_numpy(x0)
-    error = torch.inf
-    xk = x0.copy()
-    i = 0
-    while error > tol and i <= max_iter:
-        i += 1
-        x_k1 = torch.tensor([])
-        for j in range(len(xk)):
-            x_k1 = torch.append(
-                x_k1,
-                (1-w)*xk[j]
-                + (w/A[j,j])*(
-                    - torch.dot(A[j, :j], x_k1[:j])
-                    - torch.dot(A[j, j+1:], xk[j+1:])
-                    + b[j]
-                )
-            )
-        error = torch_inf_norm(x_k1 - xk)/torch_inf_norm(x_k1)
-        xk = x_k1
-    if i >= max_iter:
-        return xk, 1000
-    else:
-        return xk, i
-
-def torch_inf_norm(v):
-    return max(np.abs(v))
+    plot_surface()
 
 if __name__ == "__main__":
     main()

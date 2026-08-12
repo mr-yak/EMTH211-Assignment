@@ -1,7 +1,6 @@
 import question_one
 import question_two
 import question_three
-import matplotlib.pyplot as plt
 from tests import *
 
 question = "Q_1 Q_2 Q3"

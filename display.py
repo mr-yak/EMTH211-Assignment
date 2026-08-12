@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -44,7 +43,7 @@ def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
     fig.suptitle(r"Number of iterations to converge vs $\omega$ using Successive Over Relaxation")
     def _plot(ax_n):
         ax_n.set_xlabel(r'$\omega$ value')
-        ax_n.plot( ws, gs_iters, label='Gauss-Siedel Iterations', color='orange')
+        ax_n.plot( ws, gs_iters, label='Gauss-Seidel Iterations', color='orange')
         ax_n.plot(ws, iters, color="red", label='SOR Iterations')
         mask = iters <= gs_iters
         ax_n.fill_between(ws_gt_gs, gs_iters[mask], iters[mask], facecolor="none", hatch="xxx", edgecolor="orange")
@@ -52,5 +51,6 @@ def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
     _plot(ax_3)
     _plot(ax_4)
 
-def plot_surface(X,Y,Z):
+def plot_surface():
+    #print(f"X = \n{X}\nY = \n{Y}\nZ = \n{Z}")
     pass
