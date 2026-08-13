@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import pickle
 
 def V(v):
     return r"\mathbf{\underline{" + v + r"}}"
@@ -51,6 +52,13 @@ def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
     _plot(ax_3)
     _plot(ax_4)
 
-def plot_surface():
-    #print(f"X = \n{X}\nY = \n{Y}\nZ = \n{Z}")
+def plot_surface(from_file = True):
+    if from_file:
+        with open('X.pkl', 'rb') as file:
+            X = pickle.load(file)
+        with open('Y.pkl', 'rb') as file:
+            Y = pickle.load(file)
+        with open('X.pkl', 'rb') as file:
+            Z = pickle.load(file)
+    print(f"X = \n{X}\nY = \n{Y}\nZ = \n{Z}")
     pass
