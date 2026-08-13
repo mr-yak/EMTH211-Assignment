@@ -3,7 +3,6 @@ only part A done, will get onto part B later in the week, could you give it a qu
 
 also i saw you changed up Q2, if you want to do the same here go ahead, im just a bit lost with that so cant really help there
 """
-from question_one import *
 from display import *
 from tqdm import tqdm
 import numpy as np
@@ -14,7 +13,7 @@ os.environ["NUMBA_CPU_NAME"] = "generic"
 
 from numba import *
 
-RECALCULATE = True
+RECALCULATE = False
 
 @njit
 def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
@@ -41,31 +40,7 @@ def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
     if error > tol:
         return xk, 1001
     return xk, i
-'''
-def sor(A, b, x0, w, max_iter =1000 , tol =1e-8 ):
-    error = np.inf
-    xk = x0.copy()
-    i = 0
-    while error > tol and i <= max_iter:
-        i += 1
-        x_k1 = np.array([])
-        for j in range(len(xk)):
-            x_k1 = np.append(
-                x_k1,
-                (1-w)*xk[j]
-                + (w/A[j,j])*(
-                    - np.dot(A[j, :j], x_k1[:j])
-                    - np.dot(A[j, j+1:], xk[j+1:])
-                    + b[j]
-                )
-            )
-        error = inf_norm(x_k1 - xk)/inf_norm(x_k1)
-        xk = x_k1
-    if i >= max_iter:
-        return xk, 1000
-    else:
-        return xk, i
-'''
+
 def good_matrix(n , d ):
     rng = np.random.default_rng(seed = 211)
     B = rng.uniform(size =(n, n))
@@ -74,20 +49,19 @@ def good_matrix(n , d ):
 def _calculate_d_and_w():
     b = np.ones(20)
     x0 = b.copy()
-    ds = np.linspace(0.01, 2, 50)
+    ds = np.arange(0.01, 2.01, 0.01)
     ws = np.linspace(0.01, 1.99, 300)
-    print(f"data = { len(ds) * len(ws)}")
     X = np.zeros((len(ds), len(ws)))
     Y = np.zeros((len(ds), len(ws)))
     Z = np.zeros((len(ds), len(ws)))
     for i, d in tqdm(enumerate(ds.tolist()), desc = "Data Crunching..."):
-        X[i] = np.full((len(ws),), d)
+        Y[i] = np.full((len(ws),), d)
         A = good_matrix(20, d)
         iters = np.zeros(len(ws))
         for j, w in enumerate(ws.tolist()):
             x, num_iter = sor(A, b, x0, w, max_iter=1000)
             iters[j] = num_iter
-        Y[i] = ws
+        X[i] = ws
         Z[i] = iters
     with open("x.pkl", "wb") as file:
         pickle.dump(X, file)

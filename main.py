@@ -3,7 +3,7 @@ import question_two
 import question_three
 from tests import *
 
-question = "Q_1 Q_2 Q3"
+question = "Q1 Q2 Q3"
 
 def main():
     np.set_printoptions(precision = 5)
@@ -13,6 +13,7 @@ def main():
         question_two.main()
     if "Q3" in question:
         question_three.main()
+    plt.tight_layout()
     plt.show()
 
 
