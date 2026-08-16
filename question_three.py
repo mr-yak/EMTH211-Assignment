@@ -11,7 +11,7 @@ import os
 
 os.environ["NUMBA_CPU_NAME"] = "generic"
 
-from numba import *
+from numba import njit
 
 RECALCULATE = False
 
@@ -50,10 +50,13 @@ def _calculate_d_and_w():
     b = np.ones(20)
     x0 = b.copy()
     ds = np.arange(0.01, 2.01, 0.01)
-    ws = np.linspace(0.01, 1.99, 300)
+    ws = np.arange(0.01, 1.995, 0.005)
     X = np.zeros((len(ds), len(ws)))
     Y = np.zeros((len(ds), len(ws)))
     Z = np.zeros((len(ds), len(ws)))
+    w_min = np.zeros((len(ds), 3))
+    gs = np.zeros((len(ds),2))
+    k = 0
     for i, d in tqdm(enumerate(ds.tolist()), desc = "Data Crunching..."):
         Y[i] = np.full((len(ws),), d)
         A = good_matrix(20, d)
@@ -61,7 +64,12 @@ def _calculate_d_and_w():
         for j, w in enumerate(ws.tolist()):
             x, num_iter = sor(A, b, x0, w, max_iter=1000)
             iters[j] = num_iter
+            if (np.isclose(w,1.)):
+                gs[k] = [d, num_iter]
+                k += 1
         X[i] = ws
+        w_min_index = iters.argmin()
+        w_min[i] = [ws[w_min_index], d, iters[w_min_index]]
         Z[i] = iters
     with open("x.pkl", "wb") as file:
         pickle.dump(X, file)
@@ -69,8 +77,13 @@ def _calculate_d_and_w():
         pickle.dump(Y, file)
     with open("z.pkl", "wb") as file:
         pickle.dump(Z, file)
+    with open("w_min.pkl", "wb") as file:
+        pickle.dump(w_min, file)
+    with open("GS.pkl", "wb") as file:
+        pickle.dump(gs, file)
 
 def main():
+    print("#" * 25 + "QUESTION THREE" + "#" * 25)
     #a i)
     A = good_matrix(20, .5)
     b = np.ones(20)
@@ -88,11 +101,9 @@ def main():
     best_w = ws[np.argmin(iters)]
     sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs)
     width = 50
-    print("#" * width)
     print(f"GS takes {gs_iter:.0f} iterations to converge")
     print(f"SOR is better that GS when {ws_gt_gs[0]:.3f} < ω < {ws_gt_gs[-1]:.3f}")
     print(f"SOR is best when ω = {best_w:.3f}, taking {iters[np.argmin(iters)]:.0f} iterations to converge")
-    print("#" * width)
     #b)
 
     if RECALCULATE:

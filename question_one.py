@@ -71,6 +71,7 @@ def inf_norm(v):
     return max(np.abs(v))
 
 def main():
+    print("#" * 25 + "QUESTION ONE" + "#" * 25)
     A = np.array([
         [10.0, -4.0, -3.9, -5.9, 0.5],
         [1.0, -0.4, 2.4, -2.0, 3.7],
@@ -79,9 +80,9 @@ def main():
         [-7.5, 3.5, 5.9, 8.5, -6.2]
     ])
     P, L, U = myLU(A)
-    print(f"P = \n{P}")
-    print(f"L = \n{L}")
-    print(f"U = \n{U}")
+    print(f"\nP = \n{P}\n")
+    print(f"\nL = \n{L}\n")
+    print(f"\nU = \n{U}\n")
     B = scipy.linalg.orth(np.random.rand(5, 5))
     B = B.astype(np.longdouble)
     x_true = np.ones(5, dtype=np.longdouble)
