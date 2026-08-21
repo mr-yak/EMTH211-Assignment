@@ -1,20 +1,20 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import pickle
-
+import numpy as np
 
 
 def V(v):
     return r"\mathbf{\underline{" + v + r"}}"
 
 def power_plot(ks, errors):
-    fig1 = plt.figure(1, figsize = (12.8, 9.6))
-    fig1.tight_layout()
+    fig1 = plt.figure(1, figsize = (6.4, 4.8))
     ax_1 = fig1.add_subplot(111)
     ax_1.plot(ks, errors, label = "Relative Error", color = "r")
     ax_1.set_xlabel(r"k solving $\mathit{A}^k" + V(r"x") +" = " + V(r"b") + r"$")
     ax_1.set_ylabel(r"Error using $\infty$-norm $\frac{||" + V("x") + "-" + V(r"\tilde{x}") + r"||_{\infty}}{||" + V("x") + r"||_{\infty}}$")
     ax_1.set_title("Error vs k solving 5x5 orthogonal linear system")
+    fig1.tight_layout()
 
 def hilbert_table(ns, resids, errors, conds):
     df = pd.DataFrame({
@@ -28,27 +28,45 @@ def hilbert_table(ns, resids, errors, conds):
     pd.set_option("display.float_format", lambda x: f"{x:.4g}")
     print(df.to_string(index = False))
     print("\n")
+    df.style.format(to_scientific_latex).to_latex(
+        "hilbert_table.tex",
+        )
 
-def timing_plot():
-    fig2 = plt.figure(2, figsize = (12.8, 9.6))
-    fig2.tight_layout()
+def to_scientific_latex(val):
+    if val == 0:
+        return "$0$"
+    # Format to standard scientific string
+    s = "{:.2e}".format(val)
+    mantissa, exponent = s.split('e')
+    # Clean up the sign and leading zeros from the exponent
+    exponent = int(exponent)
+    if exponent <= 2 and exponent >= -2:
+        return f"{float(mantissa) * (10 ** exponent)}"
+    return f"${mantissa} \\times 10^{{{exponent}}}$"
+
+def timing_plot(k):
+    fig2 = plt.figure(2, figsize = (6.4, 4.8))
     ax_2 = fig2.add_subplot(111)
     with open('times.pkl', 'rb') as file:
         data = pickle.load(file)  # ds
     ns = data[1]
-    times = data[0]
+    time_data = data[0]
+    times = np.empty(len(ns))
+    for i, time in enumerate(time_data.tolist()):
+        times[i] = np.mean(time)
+
     # calculate theoretical using (count = 2/3*n**3)
-    theoretical_time = times[-1] * (ns / ns[-1]) ** 3
-    ax_2.set_title(r"Time vs Matrix Size between $n = 1$ and $n = 1000$" + "\n" +r"averaged over 10 solves per $n$")
+    theoretical_time = np.median(times[-1]) * (ns / ns[-1]) ** 3
+    ax_2.set_title(r"Time vs Matrix Size between $n = 1$ and $n = 1000$" + "\n" +f"averaged over {k} solves per " + r"$n$")
     ax_2.set_ylabel("Time [s]")
     ax_2.set_xlabel("Matrix Size (n)")
     ax_2.plot(ns, times, label='actual')
     ax_2.plot(ns, theoretical_time, label='theoretical')
     ax_2.legend()
+    fig2.tight_layout()
 
 def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
-    fig3 = plt.figure(3, figsize = (19.2, 9.6))
-    fig3.tight_layout()
+    fig3 = plt.figure(3, figsize = (9.6, 4.8))
     ax_3 = fig3.add_subplot(121)
     ax_4 = fig3.add_subplot(122)
     ax_4.set_yscale('log')
@@ -64,6 +82,7 @@ def sor_iteration_plot(ws, iters, gs_iters, ws_gt_gs):
         ax_n.legend(loc="upper right")
     _plot(ax_3)
     _plot(ax_4)
+    fig3.tight_layout()
 
 def plot_surface(from_file = True):
     if from_file:
@@ -83,9 +102,7 @@ def plot_surface(from_file = True):
     w_min_X = w_min[0]
     w_min_Y = w_min[1]
     w_min_Z = w_min[2]
-
-    fig4 = plt.figure(4, figsize = (19.2, 9.6))
-    fig4.tight_layout()
+    fig4 = plt.figure(4, figsize = (9.6, 6.8))
     ax_5 = plt.subplot2grid((2,3), (0,0), fig=fig4)
     ax_3d = plt.subplot2grid((2,3), (0,1), rowspan=2, colspan=2, projection='3d', fig=fig4)
     ax_6 = plt.subplot2grid((2,3), (1,0), fig=fig4)
@@ -106,6 +123,7 @@ def plot_surface(from_file = True):
     ax_5.set_xlabel(r'Diagonal dominance $d$ value')
     ax_5.set_title(r"Optimum $\omega$ for each diagonal dominance $d$ value")
     ax_6.plot(w_min_Y, (gs_iters/w_min_X))
-    ax_6.set_title("Ratio of GS iterations to optimum number of SOR" + "\n" + r"iterations for each diagonal dominance $d$ value")
+    ax_6.set_title(r"Iteration ratio for each diagonal dominance $d$ value")
     ax_6.set_xlabel(r'Diagonal dominance $d$ value')
     ax_6.set_ylabel('Iteration Ratio')
+    fig4.tight_layout()

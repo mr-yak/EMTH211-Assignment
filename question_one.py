@@ -1,6 +1,8 @@
 import numpy as np
 import scipy
 from display import *
+from tests import numpy_2_latex
+
 
 def myLU(A, dtype = np.float64):
     """ Takes a nxn numpy array and computes its
@@ -93,7 +95,7 @@ def main():
         x_approx = solve_system(B, b, k, dtype = np.longdouble)
         errors = np.append(errors, inf_norm(x_true - x_approx)/inf_norm(x_true))
     power_plot(ks, errors)
-    ns = np.arange(2, 15)
+    ns = np.arange(2, 16)
     residuals = np.zeros(ns.size)
     errors = np.zeros(ns.size)
     conds = np.zeros(ns.size)
@@ -110,4 +112,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

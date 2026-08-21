@@ -50,3 +50,12 @@ def myRowEchelon(A):
         for row in range(col + 1, m):
             A[row] = A[row] - (A[row, col] / A[col, col]) * A[col]
     return A
+
+def numpy_2_latex(A):
+    for row in range(A.shape[0]):
+        for col in range(A.shape[1]):
+            if col != A.shape[1] - 1:
+                print(f" {A[row, col]:.3g} &", end="")
+            else:
+                print(f" {A[row, col]:.3g}", end="")
+        print(r"\\")

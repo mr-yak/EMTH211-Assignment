@@ -3,54 +3,46 @@
 # other application does affect outcome (1000x1000 = .006 vs .010 (s) while opening app)
 
 import time
-import numpy as np
 from display import *
 import os
 import pickle
 from tqdm import tqdm
 
 os.environ["NUMBA_CPU_NAME"] = "generic"
-from numba import njit, objmode
+
+import numpy as np
+from numba import njit
 
 RECALCULATE = False
 
 def main():
     print("#" * 25 + "QUESTION TWO" + "#" * 25)
+    solvey(np.array([[1.]]), np.array([1.])) # jit compile step
+    k = 50
     if RECALCULATE:
-        ns = np.linspace(2, 1000, 999, dtype = int)
-        times = np.zeros(len(ns))
+        rng = np.random.default_rng(seed=42)
+        ns = np.arange(2, 1001, 2, dtype = int)
+        times = np.empty((len(ns), k))
         for i, n in tqdm(enumerate(ns.tolist()), desc = "Time Crunching"):
-            avg_times =  np.zeros(10)
-            for j in range(10):
-                avg_times[j] = calculate_timings(n, times)
-            times[i] = np.average(avg_times)
+            times[i] = calculate_timings(n, rng, k)
         with open("times.pkl", "wb") as file:
             pickle.dump([times, ns], file)
     print("\n")
+    timing_plot(k)
 
-
-    timing_plot()
+def calculate_timings(n, rng, k):
+    times = np.empty(k)
+    for l in range(k):
+        A = rng.random((n, n))  # random matrix
+        b = rng.random(n)
+        t0 = time.perf_counter()
+        solvey(A, b) # only solving within times
+        times[l] = (time.perf_counter() - t0)
+    return times
 
 @njit
-def calculate_timings(n, times):
-    A = np.random.rand(n, n) #random matrix
-    b = np.random.rand(n) # random vector
-    with objmode(t0='f8'):
-        t0 = time.time()
-    np.linalg.solve(A, b) # only solving within times
-    with objmode(t1='f8'):
-        t1 = time.time()
-    delta_time = t1 - t0 # time takes
-    return delta_time
-
-"""
-c)
-theory and practice are similar but not identical, actual times from 2 - 999 are slightly greater on average
-reasons as follows
-1. flop_count != 2/3n**3, it also has n**2 & n factors
-2. random variance in background applications/system noise
-3.using n=10k, actual time trends to theoretical time
-"""
+def solvey(A,b):
+    return np.linalg.solve(A, b)
 
 if __name__ == "__main__":
     main()
